@@ -68,12 +68,36 @@ pub fn cmd_line(
             },
 
             "mostrar" => {
-                if args.len() != 3 {
+                if args.len() < 3 || args.len() > 4 {
                     println!("Número de argumentos equivocado.");
-                    println!("Opciones:\n\tmostrar curso [id]");
+                    println!("\tmostrar curso [id]");
+                    println!("\tmostrar grupo [curso_id] [horario_id]");
                     continue
                 }
-                mostrar_curso(cursos, args[2], instructores, militantes);
+
+                if args[1] == "curso" {
+                    if args.len() == 3 {
+                        mostrar_curso(cursos, args[2], instructores, militantes);
+                    }
+                    else {
+                        println!("Número de argumentos equivocado.");
+                        println!("Opciones:\n\tmostrar curso [id]");
+                    }
+                    continue
+                }
+                else if args[1] == "grupo" {
+                    if args.len() == 4 {
+                        mostrar_grupo(cursos, instructores, militantes, args[2], args[3]);
+                    }
+                    else {
+                        println!("Número de argumentos equivocado.");
+                        println!("Opciones:\n\tmostrar grupos [grupo_id] [horario_id]");
+                    }
+                    continue
+                }
+
+                println!("Argumento equivocado.");
+                println!("Opciones:\n\tmostrar [curso | grupo] ...");  
             },
 
             "help" => {

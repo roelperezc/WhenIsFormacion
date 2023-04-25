@@ -58,8 +58,8 @@ pub struct Tema {
 pub struct Curso {
     pub tema : Tema,
     pub grupos : Vec<Grupo>,
-    pub instructores_que_imparten : Vec<usize>,
-    pub militantes_que_tomaran : Vec<usize>, 
+    pub instructores_que_imparten : BTreeSet<usize>,
+    pub militantes_que_tomaran : BTreeSet<usize>, 
 }
 
 #[derive(Debug,Clone)]
@@ -245,7 +245,7 @@ impl Horario {
         7*x + y
     }
 
-    fn string( &self ) -> String {
+    fn to_string( &self ) -> String {
         
         let mut dia = match &self.dia {
             Dia::Lu => String::from("Lunes "),
@@ -332,14 +332,12 @@ Militantes e instructores:
     info [instructores | militantes] [nombre | id]
 
 Cursos y grupos:
-    TODO: mostrar curso [id]
-    TODO: mostrar grupo <curso_id> <grupo_id>
+    mostrar curso [id]
+    mostrar grupo <curso_id> <grupo_id>
     TODO: crear grupo <curso_id> <horario> [-x <lista> | -i <lista>]
     TODO: inscribir [instructor | militante] [nombre | id] [curso] [id] 
 ")
 }
-
-
 
 
 /*
@@ -348,14 +346,22 @@ Cursos y grupos:
 
 pub fn listar_afiliades<T: Afiliade>(afiliades : &Vec<T>) -> () {
     for (i,afiliade) in afiliades.iter().enumerate() {
-        println!("{}. {}", i, &afiliade.get_nombre());
+        println!("\t{}. {}", i, &afiliade.get_nombre());
     }
 }
 
-fn listar_afiliades_por_id<T: Afiliade>( ids : &Vec<usize>,  afiliades : &Vec<T>) -> () {
+fn listar_afiliades_de_curso<T:Afiliade>( ids : &BTreeSet<usize>,  afiliades : &Vec<T>) -> () {
     
     for id in ids {
-        println!("{}. {}", &afiliades[*id].get_id(), &afiliades[*id].get_nombre() );
+        println!("\t{}. {}", &afiliades[*id].get_id(), &afiliades[*id].get_nombre() );
+    }
+
+}
+
+fn listar_afiliades_de_grupo<T:Afiliade>( ids : &Vec<usize>,  afiliades : &Vec<T>) -> () {
+    
+    for id in ids {
+        println!("\t{}. {}", &afiliades[*id].get_id(), &afiliades[*id].get_nombre() );
     }
 
 }
@@ -476,11 +482,44 @@ pub fn buscar_curso_por_id( tema : &str ) -> Result<Tema, ()> {
         "A3"|"a3" => Ok(Tema::new(Bloque::B3,Area::A)),
         "B3"|"b3" => Ok(Tema::new(Bloque::B3,Area::B)),
         "C3"|"c3" => Ok(Tema::new(Bloque::B3,Area::C)),
-        _ => { println!("Opción inválida. id puede ser: A1, B1, C1, A2, B2, C2, A3, B3, C3."); Err(()) },
+        _ => { println!("Opción de tema inválido. id puede ser: A1, B1, C1, A2, B2, C2, A3, B3, C3."); Err(()) },
         }
 }
 
-pub fn mostrar_curso( 
+pub fn buscar_horario_por_id( horario : &str ) -> Result<Horario, ()> {
+    let horario = horario.to_lowercase();
+
+    if horario.len() != 4 {
+        println!("Opción inválida. Formato es: ddhh");
+        return Err(());
+    }
+
+    let hora_str = &horario[2..4]; 
+    let dia_str = &horario[0..2];
+
+    let dia = match dia_str {
+        "lu" => Dia::Lu,
+        "ma" => Dia::Ma,
+        "mi" => Dia::Mi,
+        "ju" => Dia::Ju,
+        "vi" => Dia::Vi,
+        "sa" => Dia::Sa,
+        "do" => Dia::Do,
+        _ => { println!("Opción de horario inválido. Formato es: ddhh"); return Err(()); },
+    };
+
+    let hora = match hora_str {
+        "07" => Hora::H07, "08" => Hora::H08, "09" => Hora::H09, "10" => Hora::H10,
+        "11" => Hora::H11, "12" => Hora::H12, "13" => Hora::H13, "14" => Hora::H14,
+        "15" => Hora::H15, "15" => Hora::H15, "16" => Hora::H16, "17" => Hora::H17,
+        "18" => Hora::H18, "19" => Hora::H19, "20" => Hora::H20, "21" => Hora::H21,
+        _ => { println!("Opción de horario inválido. Formato es: ddhh"); return Err(()); },
+    };
+
+    Ok( Horario{ hora, dia } )
+}
+
+pub fn mostrar_curso ( 
     cursos : &Vec<Curso>, 
     curso_id : &str, 
     instructores : &Vec<Instructor>, 
@@ -491,14 +530,14 @@ pub fn mostrar_curso(
         Err(()) => return,
     };
 
-    println!("\n\tTema: {}", curso.tema.to_string() );
+    println!("\n\tTema: {}\n", curso.tema.to_string() );
     horarios_curso(&curso.grupos);
 
-    println!("\n\tInstructores que lo imparten:");
-    listar_afiliades_por_id( &curso.instructores_que_imparten, instructores );
+    println!("\n\tInstructores que lo imparten: {}", curso.instructores_que_imparten.len());
+    listar_afiliades_de_curso( &curso.instructores_que_imparten, instructores );
 
-    println!("\n\tMilitantes que requieren tomarlo");
-    listar_afiliades_por_id( &curso.militantes_que_tomaran, militantes);
+    println!("\n\tMilitantes que requieren tomarlo: {}", curso.militantes_que_tomaran.len());
+    listar_afiliades_de_curso( &curso.militantes_que_tomaran, militantes);
 }
 
 
@@ -580,13 +619,13 @@ pub fn asignar_afiliades_a_cursos(
 
         for instructor in instructores {
             if instructor.temas_que_imparte.contains(tema) {
-                curso.instructores_que_imparten.push( instructor.id );
+                curso.instructores_que_imparten.insert( instructor.id );
             }
         }
 
         for militante in militantes {
             if militante.temas_que_lleva.contains(tema) {
-                curso.militantes_que_tomaran.push( militante.id );
+                curso.militantes_que_tomaran.insert( militante.id );
             }
         }
     }
@@ -619,7 +658,48 @@ pub fn generar_grupos_de_curso(
     }
 }
 
- 
+
+/*
+// Mostrar grupo
+*/
+
+
+pub fn mostrar_grupo(
+    cursos : &Vec<Curso>,
+    instructores : &Vec<Instructor>,
+    militantes : &Vec<Militante>,
+    curso_id : &str,
+    horario_id : &str 
+) {
+
+    let tema = match buscar_curso_por_id(curso_id) { 
+        Ok(tema) => tema,
+        Err(()) => return,
+    };
+
+    let curso = &cursos[tema.indice()];
+    
+    let horario = match buscar_horario_por_id(horario_id) {
+        Ok(horario) => horario,
+        Err(()) => return,
+    };
+
+    let grupo = &curso.grupos[horario.indice()];
+
+    println!("\tTema: {}", tema.to_string());
+    println!("\tHorario: {}", horario.to_string());
+
+    println!("\n\tInstructores con disponibilidad: {}", grupo.instructores.len());
+    listar_afiliades_de_grupo( &grupo.instructores, instructores );
+    println!("\n\tMilitantes con disponibilidad: {}", grupo.militantes.len());
+    listar_afiliades_de_grupo( &grupo.militantes, militantes);
+
+}
+
+
+
+/* 
 fn lista_de_afiliade<T:Afiliade>( arg : &str, Vec<T> ) -> Result<Vec<usize>,()> {
 
 }
+*/

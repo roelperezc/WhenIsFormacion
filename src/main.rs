@@ -1,3 +1,5 @@
+use std::collections::BTreeSet;
+
 
 pub mod utils;
 pub mod parsing;
@@ -82,8 +84,8 @@ fn main() {
                         area : area.clone()
                     },
                     grupos : grupos.clone(),
-                    instructores_que_imparten : vec![],
-                    militantes_que_tomaran : vec![],
+                    instructores_que_imparten : BTreeSet::new(),
+                    militantes_que_tomaran : BTreeSet::new(),
                 }
             );
         }
