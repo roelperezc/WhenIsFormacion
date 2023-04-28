@@ -14,7 +14,7 @@ pub fn parsear_militantes() -> Vec<Militante> {
         for (i, linea_result) in lineas.enumerate() {
             let militante = match linea_result {
                 Ok(linea) => parsear_militante(i, linea),
-                Err(error) => panic!("Error leyendo archivo militantes.csv"), 
+                Err(_) => panic!("Error leyendo archivo militantes.csv"), 
             };
             militantes.push(militante);
         }
@@ -43,7 +43,7 @@ pub fn parsear_instructores() -> Vec<Instructor> {
         for (i, linea_result) in lineas.enumerate() {
             let instructor = match linea_result {
                 Ok(linea) => parsear_instructor(i, linea),
-                Err(error) => panic!("Error leyendo archivo instructores.tsv"), 
+                Err(_) => panic!("Error leyendo archivo instructores.tsv"), 
             };
             instructores.push(instructor);
         }
@@ -165,15 +165,15 @@ fn parsear_temas_instructores(split : &mut Split<'_,&str>) -> Vec<Tema> {
         None => panic!("Error parseando las áreas de Instructores"),
     };
 
-    if (bloques_str.contains("1")){
+    if bloques_str.contains("1") {
         bloques.push(Tema::new(Bloque::B1,area.clone()));
     }
     
-    if (bloques_str.contains("2")){
+    if bloques_str.contains("2") {
         bloques.push(Tema::new(Bloque::B2,area.clone()));
     }
     
-    if (bloques_str.contains("3")){
+    if bloques_str.contains("3") {
         bloques.push(Tema::new(Bloque::B3,area.clone()));
     }
 
@@ -187,11 +187,6 @@ where P: AsRef<Path>, {
     let file_result = File::open(filename);
     match file_result {
         Ok(file) => Ok(io::BufReader::new(file).lines()),
-        Err(error) => panic!("No se pudo leer el archivo militante.tsv o instructor.tsv"),
+        Err(_) => panic!("No se pudo leer el archivo militante.tsv o instructor.tsv"),
     }
-}
-
-
-fn print_type_of<T>(_: &T) {
-    println!("{}", std::any::type_name::<T>())
 }

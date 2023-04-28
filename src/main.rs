@@ -8,10 +8,8 @@ pub mod cmd_line;
 use crate::utils::*;
 use crate::utils::{
     Hora,Dia,Bloque,Area,
-    Horario,Curso,Militante,Instructor
+    Horario,Curso
 };
-
-use crate::parsing::*;
 
 
 fn main() {
@@ -100,6 +98,9 @@ fn main() {
     for mut curso in &mut cursos {
         generar_grupos_de_curso(&mut curso, &instructores, &militantes)
     }
+
+
+    let grupos_confirmados : Vec<(Tema, Grupo)> = vec![];
 
 
     cmd_line::cmd_line(

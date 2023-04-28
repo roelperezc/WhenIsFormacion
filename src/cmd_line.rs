@@ -1,5 +1,3 @@
-use std::io;
-use std::str::Split;
 use crate::utils::*;
 use crate::utils::{Instructor,Militante};
 
@@ -15,7 +13,7 @@ pub fn cmd_line(
         println!("");
         std::io::stdin().read_line(&mut input).unwrap();
         input.pop().unwrap();
-        let mut split = input.split(' ');
+        let split = input.split(' ');
         let args : Vec<&str> = split.collect();
 
         match args[0] {
@@ -99,6 +97,20 @@ pub fn cmd_line(
                 println!("Argumento equivocado.");
                 println!("Opciones:\n\tmostrar [curso | grupo] ...");  
             },
+
+            "crear" => {
+                if args.len() == 3 {
+                    crear_grupo(cursos, instructores, militantes, args[1], args[2], "", "");
+                }
+                else if args.len() == 5 {
+                    crear_grupo(cursos, instructores, militantes, args[1], args[2], args[3], args[4]);
+                }
+                else {
+                    crear_grupo_help("Número de argumentos equivocado.");
+                }
+
+            },
+
 
             "help" => {
                 help();

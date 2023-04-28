@@ -2,6 +2,7 @@
 use colored::Colorize;
 use std::fmt::Write as _;
 use std::collections::BTreeSet;
+use std::str::Split;
 
 pub enum Modalidad {
     P,
@@ -384,14 +385,14 @@ pub fn buscar_afiliade_por_nombre<T: Afiliade>(nombre: &str, lista : &Vec<T>) ->
         return Ok(resultados.get(0).unwrap().0 as usize)
     }
     else if resultados.len() > 1  {
-        println!("Múltiples coincidencias: ");
+        println!("Múltiples coincidencias para: {}", nombre);
         for afiliade in resultados {
             println!("\t{}. {}", &afiliade.0, afiliade.1)
         }
         Err( () )
     }
     else {
-        println!("Sin coincidencias.");
+        println!("Sin coincidencias para: {}", nombre );
         Err( () )
     }
 }
@@ -511,8 +512,8 @@ pub fn buscar_horario_por_id( horario : &str ) -> Result<Horario, ()> {
     let hora = match hora_str {
         "07" => Hora::H07, "08" => Hora::H08, "09" => Hora::H09, "10" => Hora::H10,
         "11" => Hora::H11, "12" => Hora::H12, "13" => Hora::H13, "14" => Hora::H14,
-        "15" => Hora::H15, "15" => Hora::H15, "16" => Hora::H16, "17" => Hora::H17,
-        "18" => Hora::H18, "19" => Hora::H19, "20" => Hora::H20, "21" => Hora::H21,
+        "15" => Hora::H15, "16" => Hora::H16, "17" => Hora::H17, "18" => Hora::H18,
+        "19" => Hora::H19, "20" => Hora::H20, "21" => Hora::H21, "22" => Hora::H22,
         _ => { println!("Opción de horario inválido. Formato es: ddhh"); return Err(()); },
     };
 
@@ -553,9 +554,6 @@ fn horarios_curso( grupos : &Vec<Grupo> ) {
     println!(" Hora\t  Lu\t   Ma\t   Mi\t   Ju\t   Vi\t   Sa\t   Do");
 
     for (i,hora) in horas_string.iter().enumerate() {
-
-        let linea_ins = String::new();
-        let linea_mil = String::new();
  
         let mut ins_color_str : Vec<colored::ColoredString> = vec![];
         let mut mil_color_str : Vec<colored::ColoredString> = vec![];
@@ -613,7 +611,7 @@ pub fn asignar_afiliades_a_cursos(
     instructores : &Vec<Instructor>,
     militantes : &Vec<Militante>) {
 
-    for mut curso in cursos {
+    for curso in cursos {
 
         let tema = &curso.tema;
 
@@ -697,9 +695,64 @@ pub fn mostrar_grupo(
 }
 
 
+/*
+// Crear grupo
+*/
 
-/* 
-fn lista_de_afiliade<T:Afiliade>( arg : &str, Vec<T> ) -> Result<Vec<usize>,()> {
+pub fn crear_grupo_help( error :  &str ) {
+    println!("{}", error);
+    println!("Uso:\n\tcrear <curso_id> <horario_id> [ <-x | -i> < [id | nombre][, ...] >")
+}
+
+pub fn crear_grupo(
+    cursos : &mut Vec<Curso>,
+    instructores : &Vec<Instructor>,
+    militantes : &Vec<Militante>,
+    curso_id : &str,
+    horario_id : &str,
+    flag : &str,
+    args : &str
+) {
+
+    if flag != "-x" && flag != "-i" && flag != "" {
+        crear_grupo_help("Opciones equivocadas.");
+    }
+
+
+    let tema = match buscar_curso_por_id(curso_id) { 
+        Ok(tema) => tema,
+        Err(()) => return,
+    };
+
+    let curso = &cursos[tema.indice()];
+    
+    let horario = match buscar_horario_por_id(horario_id) {
+        Ok(horario) => horario,
+        Err(()) => return,
+    };
+
+    let grupo = &curso.grupos[horario.indice()];
+
+    let lista = match procesar_lista( args, militantes ) {
+        Ok(lista) => lista,
+        Err(()) => return,
+    };
+
+    println!("{:?}", lista);
 
 }
-*/
+
+
+fn procesar_lista( lista : &str, militantes : &Vec<Militante> ) -> Result<BTreeSet<usize>,()> {
+
+    let mut lista_militantes : BTreeSet<usize> = BTreeSet::new();
+
+    for split in lista.split(",") {
+        match buscar_afiliade( split, &militantes ) {
+            Ok(id) => {lista_militantes.insert(id);} ,
+            Err(()) => return Err(()),
+        }
+    }
+
+    Ok(lista_militantes)
+}
