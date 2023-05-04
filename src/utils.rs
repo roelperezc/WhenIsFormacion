@@ -752,7 +752,7 @@ pub fn crear_grupo(
     cursos : &mut Vec<Curso>,
     grupos_confirmados : &mut Vec<(Tema,Grupo)>,
     instructores : &Vec<Instructor>,
-    militantes : &Vec<Militante>,
+    militantes : &mut Vec<Militante>,
     curso_id : &str,
     horario_id : &str,
     flag : &str,
@@ -818,7 +818,14 @@ pub fn crear_grupo(
 
     grupos_confirmados.push(grupo_creado);
 
+    // Se retiran les militantes inscritos de la lista del curso
     curso.militantes_que_tomaran = curso.militantes_que_tomaran.difference(&grupo_militantes).cloned().collect();
+    // Se retira la disponibilidad del horario inscrito de les militantes
+    for militante_id in &grupo_militantes {
+        let militante = &mut militantes[ *militante_id ];
+        militante.disponibilidad.take(&grupo.horario);
+    }
+
     generar_grupos_de_curso(curso, instructores, militantes);
     
 
