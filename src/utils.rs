@@ -363,7 +363,7 @@ Militantes e instructores:
 Cursos y grupos:
     mostrar curso [id]
     mostrar grupo <curso_id> <grupo_id>
-    TODO: crear grupo <curso_id> <horario> [-x <lista> | -i <lista>]
+    crear grupo <curso_id> <horario> [-x <lista> | -i <lista>]
     TODO: inscribir [instructor | militante] [nombre | id] [curso] [id] 
 ")
 }
@@ -840,6 +840,20 @@ fn procesar_lista( lista : &str, militantes : &Vec<Militante> ) -> Result<BTreeS
 }
 
 
-pub fn mostrar_cursos_creados( cursos_creados : &Vec<(Tema, Grupo)> ) {
-    return
+pub fn mostrar_grupos_creados(
+    grupos_creados : &Vec<(Tema, Grupo)>,
+    instructores : &Vec<Instructor>,
+    militantes : &Vec<Militante>,
+ ) {
+
+    for curso in grupos_creados {
+        println!("");
+        println!("Tema: {}", curso.0.to_string());
+        println!("Horario: {}", curso.1.horario.to_string());
+        println!("Instructores");
+        listar_afiliades_de_grupo(&curso.1.instructores, &instructores);
+        println!("Militantes");
+        listar_afiliades_de_grupo(&curso.1.militantes, &militantes);
+
+    }
 }

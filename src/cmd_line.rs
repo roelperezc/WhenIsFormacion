@@ -118,6 +118,7 @@ pub fn cmd_line(
             },
 
             "q" => {
+                mostrar_grupos_creados(grupos_confirmados, instructores, militantes);
                 break;
             },
             _ => println!("Comando no reconocido."),
