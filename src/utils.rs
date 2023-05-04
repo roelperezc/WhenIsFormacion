@@ -109,16 +109,16 @@ impl Grupo {
 pub struct Instructor {
     pub id : usize,
     pub nombre : String,
-    pub temas_que_imparte : Vec<Tema>,
-    pub disponibilidad : Vec<Horario>,
+    pub temas_que_imparte : BTreeSet<Tema>,
+    pub disponibilidad : BTreeSet<Horario>,
 }
 
 impl Instructor {
     pub fn new(
         id: usize,
         nombre : String,
-        temas_que_imparte : Vec<Tema>,
-        disponibilidad : Vec<Horario>,
+        temas_que_imparte : BTreeSet<Tema>,
+        disponibilidad : BTreeSet<Horario>,
     ) -> Instructor {
         Instructor {
             id,
@@ -133,16 +133,16 @@ impl Instructor {
 pub struct Militante {
     pub id : usize,
     pub nombre : String,
-    pub temas_que_lleva :Vec<Tema>,
-    pub disponibilidad : Vec<Horario>,
+    pub temas_que_lleva :BTreeSet<Tema>,
+    pub disponibilidad : BTreeSet<Horario>,
 }
 
 impl Militante {
     pub fn new(
         id : usize,
         nombre : String,
-        temas_que_lleva : Vec<Tema>,
-        disponibilidad : Vec<Horario>,
+        temas_que_lleva : BTreeSet<Tema>,
+        disponibilidad : BTreeSet<Horario>,
     ) -> Militante {
 
         Militante {
@@ -158,8 +158,8 @@ impl Militante {
 pub trait Afiliade {
     fn get_id(&self) -> usize;
     fn get_nombre(&self) -> &str;
-    fn get_temas(&self) -> &Vec<Tema>;
-    fn get_disponibilidad(&self) -> &Vec<Horario>;
+    fn get_temas(&self) -> &BTreeSet<Tema>;
+    fn get_disponibilidad(&self) -> &BTreeSet<Horario>;
     fn info(&self);
 }
 
@@ -170,10 +170,10 @@ impl Afiliade for Instructor {
     fn get_nombre(&self) -> &str {
         self.nombre.as_str()
     }
-    fn get_temas(&self) -> &Vec<Tema> {
+    fn get_temas(&self) -> &BTreeSet<Tema> {
         &self.temas_que_imparte
     }
-    fn get_disponibilidad(&self) -> &Vec<Horario> {
+    fn get_disponibilidad(&self) -> &BTreeSet<Horario> {
         &self.disponibilidad
     }
 
@@ -195,10 +195,10 @@ impl Afiliade for Militante {
     fn get_nombre(&self) -> &str {
         self.nombre.as_str()
     }
-    fn get_temas(&self) -> &Vec<Tema> {
+    fn get_temas(&self) -> &BTreeSet<Tema> {
         &self.temas_que_lleva
     }
-    fn get_disponibilidad(&self) -> &Vec<Horario> {
+    fn get_disponibilidad(&self) -> &BTreeSet<Horario> {
         &self.disponibilidad
     }
 
@@ -304,7 +304,7 @@ impl Horario {
 }
 
 
-pub fn mostrar_disponibilidad(disponibilidad : &Vec<Horario>) {
+pub fn mostrar_disponibilidad(disponibilidad : &BTreeSet<Horario>) {
 
     let horas : Vec<Hora> = vec![
         Hora::H07,Hora::H08,Hora::H09,Hora::H10,
@@ -475,24 +475,24 @@ pub fn mostrar_afiliade<T:Afiliade>( query : &str, afiliades : &Vec<T> ) {
 
 }
 
-pub fn temas_por_cursar( temas_cursados : Vec<Tema> ) -> Vec<Tema> {
+pub fn temas_por_cursar( temas_cursados : BTreeSet<Tema> ) -> BTreeSet<Tema> {
     
     let bloques = vec![Bloque::B1, Bloque::B2, Bloque::B3];
     let areas = vec![Area::A, Area::B, Area::C];
     
     for bloque in &bloques {
-        let mut temas_por_cursar : Vec<Tema> = vec![];
+        let mut temas_por_cursar : BTreeSet<Tema> = BTreeSet::new();
         for area in &areas {
             let tema = Tema::new(bloque.clone(),area.clone());
             if !( temas_cursados.contains(&tema) ) {
-                temas_por_cursar.push(tema.clone()); 
+                temas_por_cursar.insert(tema.clone()); 
             }   
         }
         if temas_por_cursar.len() != 0 {
             return temas_por_cursar;
         }
     }
-    vec![]
+    BTreeSet::new()
 }
 
 

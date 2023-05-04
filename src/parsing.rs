@@ -2,6 +2,7 @@ use std::fs::File;
 use std::io::{self,BufRead};
 use std::path::Path;
 use std::str::Split;
+use std::collections::BTreeSet;
 
 use crate::utils::*;
 
@@ -73,9 +74,9 @@ fn parsear_nombre(split : &mut Split<'_,&str>) -> String {
     }
 }
 
-fn parsear_horarios(split : &mut Split<'_,&str>) -> Vec<Horario> {
+fn parsear_horarios(split : &mut Split<'_,&str>) -> BTreeSet<Horario> {
 
-    let mut disponibilidad : Vec<Horario> = vec![];
+    let mut disponibilidad : BTreeSet<Horario> = BTreeSet::new();
 
     let horas : Vec<Hora> = vec![
         Hora::H07,Hora::H08,Hora::H09,Hora::H10,
@@ -102,7 +103,7 @@ fn parsear_horarios(split : &mut Split<'_,&str>) -> Vec<Horario> {
 
         for dia in &dias {
             if dias_string.contains(dia.0){
-                disponibilidad.push(
+                disponibilidad.insert(
                     Horario {
                         hora : hora.clone(),
                         dia : dia.1.clone(),
@@ -116,10 +117,10 @@ fn parsear_horarios(split : &mut Split<'_,&str>) -> Vec<Horario> {
 }
 
 
-fn parsear_temas_militantes(split : &mut Split<'_,&str>) -> Vec<Tema> {
+fn parsear_temas_militantes(split : &mut Split<'_,&str>) -> BTreeSet<Tema> {
     let bloques = vec![Bloque::B1, Bloque::B2, Bloque::B3];
         
-    let mut temas_cursados : Vec<Tema> = vec![];
+    let mut temas_cursados : BTreeSet<Tema> = BTreeSet::new();
 
     for bloque in &bloques {
 
@@ -129,22 +130,22 @@ fn parsear_temas_militantes(split : &mut Split<'_,&str>) -> Vec<Tema> {
         };
 
         if areas.contains("Filosofía") {
-            temas_cursados.push(Tema::new(bloque.clone(), Area::A));
+            temas_cursados.insert(Tema::new(bloque.clone(), Area::A));
         }
 
         if areas.contains("Economía Política") {
-            temas_cursados.push(Tema::new(bloque.clone(), Area::B));
+            temas_cursados.insert(Tema::new(bloque.clone(), Area::B));
         }
 
         if areas.contains("Comunismo Cientifico") {
-            temas_cursados.push(Tema::new(bloque.clone(), Area::C));
+            temas_cursados.insert(Tema::new(bloque.clone(), Area::C));
         }
     }
 
     temas_cursados
 }
 
-fn parsear_temas_instructores(split : &mut Split<'_,&str>) -> Vec<Tema> {
+fn parsear_temas_instructores(split : &mut Split<'_,&str>) -> BTreeSet<Tema> {
     
     let area = match split.next() {
         Some(s) => s,
@@ -158,7 +159,7 @@ fn parsear_temas_instructores(split : &mut Split<'_,&str>) -> Vec<Tema> {
         _ => Area::A, // default
     };
     
-    let mut bloques = vec![];
+    let mut bloques : BTreeSet<Tema> = BTreeSet::new();
 
     let bloques_str = match split.next() {
         Some(s) => s,
@@ -166,15 +167,15 @@ fn parsear_temas_instructores(split : &mut Split<'_,&str>) -> Vec<Tema> {
     };
 
     if bloques_str.contains("1") {
-        bloques.push(Tema::new(Bloque::B1,area.clone()));
+        bloques.insert(Tema::new(Bloque::B1,area.clone()));
     }
     
     if bloques_str.contains("2") {
-        bloques.push(Tema::new(Bloque::B2,area.clone()));
+        bloques.insert(Tema::new(Bloque::B2,area.clone()));
     }
     
     if bloques_str.contains("3") {
-        bloques.push(Tema::new(Bloque::B3,area.clone()));
+        bloques.insert(Tema::new(Bloque::B3,area.clone()));
     }
 
     bloques
