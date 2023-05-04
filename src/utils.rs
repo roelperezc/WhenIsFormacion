@@ -565,8 +565,14 @@ pub fn mostrar_curso (
     println!("\n\tInstructores que lo imparten: {}", curso.instructores_que_imparten.len());
     listar_afiliades_de_curso( &curso.instructores_que_imparten, instructores );
 
-    println!("\n\tMilitantes que requieren tomarlo: {}", curso.militantes_que_tomaran.len());
-    listar_afiliades_de_curso( &curso.militantes_que_tomaran, militantes);
+    let militantes_pueden_tomarlo : BTreeSet<usize> =
+        curso.militantes_que_tomaran.difference(&curso.militantes_sin_coincidencia).cloned().collect();
+
+    println!("\n\tMilitantes que pueden tomarlo: {}", militantes_pueden_tomarlo.len());
+    listar_afiliades_de_curso( &militantes_pueden_tomarlo, militantes);
+
+    println!("\n\tMilitantes sin coincidencias de horario: {}", &curso.militantes_sin_coincidencia.len());
+    listar_afiliades_de_curso( &curso.militantes_sin_coincidencia, militantes);
 }
 
 
@@ -664,24 +670,34 @@ pub fn generar_grupos_de_curso(
     militantes : &Vec<Militante>
 ) {
 
+
     for mut grupo in &mut curso.grupos {
-        
         grupo.instructores = BTreeSet::new();
-
-        for id in &curso.instructores_que_imparten {
-            if instructores[*id].get_disponibilidad().contains(&grupo.horario) {
-                grupo.instructores.insert( *id );
-            }
-        }
-
         grupo.militantes = BTreeSet::new();
+    }
 
-        for id in &curso.militantes_que_tomaran {
-            if militantes[*id].get_disponibilidad().contains(&grupo.horario) {
-                grupo.militantes.insert( *id );
-            }
+    for id in &curso.instructores_que_imparten {
+        for horario in instructores[*id].get_disponibilidad() {
+            curso.grupos[ horario.indice() ].instructores.insert( *id );
         }
     }
+
+    for id in &curso.militantes_que_tomaran { 
+        let mut num_cursos = 0;
+        for horario in militantes[*id].get_disponibilidad() {
+            curso.grupos[ horario.indice() ].militantes.insert( *id );
+            
+            if curso.grupos[horario.indice()].instructores.len() != 0 {
+                num_cursos += 1;
+            }
+        }
+
+        if num_cursos == 0 {
+            curso.militantes_sin_coincidencia.insert( *id );
+        }
+
+    }
+
 }
 
 
@@ -821,4 +837,9 @@ fn procesar_lista( lista : &str, militantes : &Vec<Militante> ) -> Result<BTreeS
     }
 
     Ok(lista_militantes)
+}
+
+
+pub fn mostrar_cursos_creados( cursos_creados : &Vec<(Tema, Grupo)> ) {
+    return
 }
