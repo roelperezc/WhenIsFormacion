@@ -5,6 +5,7 @@ use crate::utils::{Instructor,Militante};
 
 pub fn cmd_line(
     cursos : &mut Vec<Curso>,
+    grupos_confirmados : &mut Vec<(Tema, Grupo)>,
     instructores : &mut Vec<Instructor>,
     militantes : &mut Vec<Militante>,
 ) {
@@ -100,10 +101,10 @@ pub fn cmd_line(
 
             "crear" => {
                 if args.len() == 3 {
-                    crear_grupo(cursos, instructores, militantes, args[1], args[2], "", "");
+                    crear_grupo(cursos, grupos_confirmados, instructores, militantes, args[1], args[2], "", "");
                 }
                 else if args.len() == 5 {
-                    crear_grupo(cursos, instructores, militantes, args[1], args[2], args[3], args[4]);
+                    crear_grupo(cursos, grupos_confirmados, instructores, militantes, args[1], args[2], args[3], args[4]);
                 }
                 else {
                     crear_grupo_help("Número de argumentos equivocado.");

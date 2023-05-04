@@ -2,7 +2,6 @@
 use colored::Colorize;
 use std::fmt::Write as _;
 use std::collections::BTreeSet;
-use std::str::Split;
 
 pub enum Modalidad {
     P,
@@ -49,10 +48,23 @@ pub struct Horario {
     pub dia : Dia,
 }
 
+impl Horario {
+    pub fn new(hora : Hora, dia: Dia) -> Horario {
+        Horario { hora, dia }
+    }
+}
+
+
 #[derive(Debug,Clone,PartialEq,Eq,PartialOrd,Ord)]
 pub struct Tema {
     pub bloque : Bloque,
     pub area : Area,
+}
+
+impl Tema {
+    pub fn new( bloque : Bloque, area : Area ) -> Tema {
+        Tema { bloque, area }
+    }
 }
 
 #[derive(Debug,Clone)]
@@ -60,14 +72,37 @@ pub struct Curso {
     pub tema : Tema,
     pub grupos : Vec<Grupo>,
     pub instructores_que_imparten : BTreeSet<usize>,
-    pub militantes_que_tomaran : BTreeSet<usize>, 
+    pub militantes_que_tomaran : BTreeSet<usize>,
+    pub militantes_sin_coincidencia : BTreeSet<usize>, 
+}
+
+impl Curso {
+    pub fn new( tema : Tema , grupos : Vec<Grupo> ) -> Curso {
+        Curso {
+            tema,
+            grupos,
+            instructores_que_imparten : BTreeSet::new(),
+            militantes_que_tomaran : BTreeSet::new(),
+            militantes_sin_coincidencia : BTreeSet::new(),
+        }
+    }
 }
 
 #[derive(Debug,Clone)]
 pub struct Grupo {
     pub horario : Horario,
-    pub instructores : Vec<usize>,
-    pub militantes : Vec<usize>,
+    pub instructores : BTreeSet<usize>,
+    pub militantes : BTreeSet<usize>,
+}
+
+impl Grupo {
+    pub fn new( horario : Horario ) -> Grupo {
+        Grupo {
+            horario,
+            instructores : BTreeSet::new(),
+            militantes : BTreeSet::new(),
+        }
+    }
 }
 
 #[derive(Debug,Clone)]
@@ -179,13 +214,6 @@ impl Afiliade for Militante {
 }
 
 impl Tema {
-
-    pub fn new( bloque : Bloque, area: Area ) -> Tema {
-        Tema {
-            bloque, 
-            area,
-        }
-    }
 
     fn indice(&self) -> usize {
         let x = match self.bloque {
@@ -359,7 +387,7 @@ fn listar_afiliades_de_curso<T:Afiliade>( ids : &BTreeSet<usize>,  afiliades : &
 
 }
 
-fn listar_afiliades_de_grupo<T:Afiliade>( ids : &Vec<usize>,  afiliades : &Vec<T>) -> () {
+fn listar_afiliades_de_grupo<T:Afiliade>( ids : &BTreeSet<usize>,  afiliades : &Vec<T>) -> () {
     
     for id in ids {
         println!("\t{}. {}", &afiliades[*id].get_id(), &afiliades[*id].get_nombre() );
@@ -638,19 +666,19 @@ pub fn generar_grupos_de_curso(
 
     for mut grupo in &mut curso.grupos {
         
-        grupo.instructores = vec![];
+        grupo.instructores = BTreeSet::new();
 
         for id in &curso.instructores_que_imparten {
             if instructores[*id].get_disponibilidad().contains(&grupo.horario) {
-                grupo.instructores.push( *id );
+                grupo.instructores.insert( *id );
             }
         }
 
-        grupo.militantes = vec![];
+        grupo.militantes = BTreeSet::new();
 
         for id in &curso.militantes_que_tomaran {
             if militantes[*id].get_disponibilidad().contains(&grupo.horario) {
-                grupo.militantes.push( *id );
+                grupo.militantes.insert( *id );
             }
         }
     }
@@ -706,6 +734,7 @@ pub fn crear_grupo_help( error :  &str ) {
 
 pub fn crear_grupo(
     cursos : &mut Vec<Curso>,
+    grupos_confirmados : &mut Vec<(Tema,Grupo)>,
     instructores : &Vec<Instructor>,
     militantes : &Vec<Militante>,
     curso_id : &str,
@@ -724,7 +753,7 @@ pub fn crear_grupo(
         Err(()) => return,
     };
 
-    let curso = &cursos[tema.indice()];
+    let curso = &mut cursos[tema.indice()];
     
     let horario = match buscar_horario_por_id(horario_id) {
         Ok(horario) => horario,
@@ -733,12 +762,49 @@ pub fn crear_grupo(
 
     let grupo = &curso.grupos[horario.indice()];
 
-    let lista = match procesar_lista( args, militantes ) {
-        Ok(lista) => lista,
-        Err(()) => return,
-    };
 
-    println!("{:?}", lista);
+    let mut grupo_militantes : BTreeSet<usize> = BTreeSet::new();
+
+    // Se crea con todes les militantes con disponibilidad
+    if flag == "" && args == "" {
+        grupo_militantes = grupo.militantes.clone();
+    }
+    else if flag != "" && args != ""
+    {
+        let lista = match procesar_lista( args, militantes ) {
+            Ok(lista) => lista,
+            Err(()) => return,
+        };
+
+        if !lista.is_subset(&grupo.militantes) { 
+            println!("Hay militantes en la lista que no pertenecen a este grupo.");
+            return 
+        }
+
+        // Se crea excluyendo a les militantes de la lista
+        if flag == "-x" {
+            grupo_militantes = grupo.militantes.difference(&lista).cloned().collect();
+        }
+        // Se crea incluyendo solo a les militantes de la lista
+        else if flag == "-i" {
+            grupo_militantes = lista; 
+        }   
+    }
+
+    let grupo_creado = (
+        tema.clone(),
+        Grupo {
+            horario : grupo.horario.clone(),
+            instructores : grupo.instructores.clone(),
+            militantes : grupo_militantes.clone(),
+        }
+    );
+
+    grupos_confirmados.push(grupo_creado);
+
+    curso.militantes_que_tomaran = curso.militantes_que_tomaran.difference(&grupo_militantes).cloned().collect();
+    generar_grupos_de_curso(curso, instructores, militantes);
+    
 
 }
 

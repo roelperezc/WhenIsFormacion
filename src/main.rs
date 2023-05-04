@@ -47,14 +47,7 @@ fn main() {
     for hora in &horas{
         for dia in &dias{
             grupos.push(
-                Grupo {
-                    horario : Horario {
-                        hora : hora.clone(),
-                        dia : dia.clone(),
-                    },
-                    instructores : vec![],
-                    militantes : vec![],
-                }
+                Grupo::new( Horario::new(hora.clone(),dia.clone()) )
             );
         }
     }
@@ -76,15 +69,7 @@ fn main() {
     for bloque in &bloques {
         for area in &areas {
             cursos.push(
-                Curso {
-                    tema : Tema {
-                        bloque : bloque.clone(),
-                        area : area.clone()
-                    },
-                    grupos : grupos.clone(),
-                    instructores_que_imparten : BTreeSet::new(),
-                    militantes_que_tomaran : BTreeSet::new(),
-                }
+                Curso::new( Tema::new(bloque.clone(),area.clone()), grupos.clone() )
             );
         }
     }
@@ -100,11 +85,12 @@ fn main() {
     }
 
 
-    let grupos_confirmados : Vec<(Tema, Grupo)> = vec![];
+    let mut grupos_confirmados : Vec<(Tema, Grupo)> = vec![];
 
 
     cmd_line::cmd_line(
         &mut cursos,
+        &mut grupos_confirmados,
         &mut instructores, 
         &mut militantes,
     );
