@@ -13,8 +13,8 @@ pub fn cmd_line(
         let mut input = String::new(); 
         println!("");
         std::io::stdin().read_line(&mut input).unwrap();
-        input.pop().unwrap();
-        let split = input.split(' ');
+        let trimmed_input = input.trim();
+        let split = trimmed_input.split(' ');
         let args : Vec<&str> = split.collect();
 
         match args[0] {
@@ -113,7 +113,7 @@ pub fn cmd_line(
             },
 
 
-            "help" => {
+            "ayuda" => {
                 help();
             },
 

@@ -700,6 +700,15 @@ pub fn generar_grupos_de_curso(
 
 }
 
+pub fn generar_grupos_todos_cursos(
+    cursos : &mut Vec<Curso>,
+    instructores : &Vec<Instructor>,
+    militantes : &Vec<Militante>
+) {
+    for curso in cursos {
+        generar_grupos_de_curso(curso, instructores,militantes);
+    }
+}
 
 /*
 // Mostrar grupo
@@ -826,7 +835,7 @@ pub fn crear_grupo(
         militante.disponibilidad.take(&grupo.horario);
     }
 
-    generar_grupos_de_curso(curso, instructores, militantes);
+    generar_grupos_todos_cursos(cursos, instructores, militantes);
     
 
 }
