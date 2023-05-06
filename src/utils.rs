@@ -825,6 +825,9 @@ pub fn crear_grupo(
         }
     );
 
+    println!("\nGrupo creado!\n");
+    mostrar_grupo_creado(&grupo_creado, instructores, militantes);
+
     grupos_confirmados.push(grupo_creado);
 
     // Se retiran les militantes inscritos de la lista del curso
@@ -862,14 +865,21 @@ pub fn mostrar_grupos_creados(
     militantes : &Vec<Militante>,
  ) {
 
-    for curso in grupos_creados {
+    for grupo in grupos_creados {
         println!("");
-        println!("Tema: {}", curso.0.to_string());
-        println!("Horario: {}", curso.1.horario.to_string());
-        println!("Instructores");
-        listar_afiliades_de_grupo(&curso.1.instructores, &instructores);
-        println!("Militantes");
-        listar_afiliades_de_grupo(&curso.1.militantes, &militantes);
+        mostrar_grupo_creado(grupo, instructores, militantes);
+    } 
+}
 
-    }
+pub fn mostrar_grupo_creado(
+    grupo_creado : &(Tema, Grupo),
+    instructores : &Vec<Instructor>,
+    militantes : &Vec<Militante>,
+) {
+    println!("Tema: {}", grupo_creado.0.to_string());
+    println!("Horario: {}", grupo_creado.1.horario.to_string());
+    println!("Instructores");
+    listar_afiliades_de_grupo(&grupo_creado.1.instructores, &instructores);
+    println!("Militantes");
+    listar_afiliades_de_grupo(&grupo_creado.1.militantes, &militantes);
 }
