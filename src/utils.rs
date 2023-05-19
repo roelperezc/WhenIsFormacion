@@ -949,12 +949,12 @@ fn procesar_lista<T:Afiliade>( lista : &str, afiliades : &Vec<T> ) -> Result<BTr
 
 pub fn inscribir_help() {
     println!("Uso: 
-    inscribir [instructor | militante] [lista de afiliades] [curso_id]")
+    inscribir [instructores | militantes] [lista de afiliades] [curso_id]")
 }
 
 pub fn desinscribir_help() {
     println!("Uso: 
-    desinscribir [instructor | militante] [lista de afiliades] [curso_id]")
+    desinscribir [instructores | militantes] [lista de afiliades] [curso_id]")
 }
 
 fn inscribir_afiliade_curso<T:Afiliade> (
