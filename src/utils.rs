@@ -364,7 +364,7 @@ Cursos y grupos:
     mostrar curso [id]
     mostrar grupo <curso_id> <grupo_id>
     crear grupo <curso_id> <horario> [-x <lista> | -i <lista>]
-    TODO: inscribir [instructor | militante] [nombre | id] [curso] [id]
+    TODO: inscribir [instructor | militante] [nombre | id] [curso id]
     creados
     
 Salir
@@ -580,6 +580,7 @@ pub fn mostrar_curso (
 }
 
 
+#[cfg(target_os = "linux")]
 fn horarios_curso( grupos : &Vec<Grupo> ) {
 
     let horas_string = vec![
@@ -618,7 +619,50 @@ fn horarios_curso( grupos : &Vec<Grupo> ) {
     }
 }
 
+#[cfg(target_os = "windows")]
+fn horarios_curso( grupos : &Vec<Grupo> ) {
+
+    let horas_string = vec![
+        " 07:00"," 08:00"," 09:00"," 10:00",
+        " 11:00"," 12:00"," 13:00"," 14:00",
+        " 15:00"," 16:00"," 17:00"," 18:00",
+        " 19:00"," 20:00"," 21:00"," 22:00",
+    ];
+
+    println!(" Hora\t  Lu\t   Ma\t   Mi\t   Ju\t   Vi\t   Sa\t   Do");
+
+    for (i,hora) in horas_string.iter().enumerate() {
+ 
+        let mut ins_str : Vec<String> = vec![];
+        let mut mil_str : Vec<String> = vec![];
+
+        for j in 0..7 {
+            let grupo_dia = &grupos[7*i+j];
+            let ( num_ins, num_mil ) = grupo_dia.to_str();
+            ins_str.push(num_ins);
+            mil_str.push(num_mil);
+        }
+
+        println!("{}\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            hora,
+            ins_str[0], ins_str[1], ins_str[2],
+            ins_str[3], ins_str[4], ins_str[5],
+            ins_str[6]);
+
+        println!("\t{}\t{}\t{}\t{}\t{}\t{}\t{}",
+            mil_str[0], mil_str[1], mil_str[2],
+            mil_str[3], mil_str[4], mil_str[5],
+            mil_str[6]);
+        
+        println!("");
+    }
+}
+
+
+
+
 impl Grupo {
+    #[cfg(target_os = "linux")]
     fn to_str(&self) -> ( colored::ColoredString, colored::ColoredString )  {
 
         let instructores_size = self.instructores.len();
@@ -639,6 +683,22 @@ impl Grupo {
         }
 
         ( instructores_str.yellow(), militantes_str.yellow() )
+
+    }
+
+    #[cfg(target_os = "windows")]
+    fn to_str(&self) -> ( String, String )  {
+
+        let instructores_size = self.instructores.len();
+        let militantes_size = self.militantes.len();
+
+        let mut instructores_str = String::new();
+        let mut militantes_str = String::new();
+
+        write!(&mut instructores_str, "  {}", instructores_size ).unwrap() ;
+        write!(&mut militantes_str, "  {}", militantes_size ).unwrap() ;
+
+        ( instructores_str, militantes_str )
 
     }
 }
@@ -862,6 +922,11 @@ fn procesar_lista( lista : &str, militantes : &Vec<Militante> ) -> Result<BTreeS
     Ok(lista_militantes)
 }
 
+
+// Inscribir militantes/instructores a cursos
+
+
+// Mostrar grupos creados
 
 pub fn mostrar_grupos_creados(
     grupos_creados : &Vec<(Tema, Grupo)>,
