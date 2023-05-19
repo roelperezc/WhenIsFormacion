@@ -112,6 +112,40 @@ pub fn cmd_line(
 
             },
 
+            "inscribir" => {
+                if args.len() != 4 {
+                    println!("Número de argumentos equivocado.");
+                    inscribir_help();
+                    continue
+                }
+
+                match args[1] {
+                    "instructores" => inscribir_afiliades_curso(instructores, args[2], args[3]),
+                    "militantes" => inscribir_afiliades_curso(militantes, args[2], args[3]),
+                    _ => inscribir_help(),
+                }
+
+                generar_grupos_todos_cursos(cursos, instructores, militantes);
+
+            },
+
+            "desinscribir" => {
+                if args.len() != 4 {
+                    println!("Número de argumentos equivocado.");
+                    desinscribir_help();
+                    continue
+                }
+
+                match args[1] {
+                    "instructores" => desinscribir_afiliades_curso(instructores, args[2], args[3]),
+                    "militantes" => desinscribir_afiliades_curso(militantes, args[2], args[3]),
+                    _ => desinscribir_help(),
+                }
+
+                generar_grupos_todos_cursos(cursos, instructores, militantes);
+
+            },
+
 
             "ayuda" => {
                 help();

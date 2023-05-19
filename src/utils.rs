@@ -9,7 +9,7 @@ pub enum Modalidad {
     M,
 }
 
-#[derive(Debug,Clone,PartialEq,Eq,PartialOrd,Ord)]
+#[derive(Debug,Copy,Clone,PartialEq,Eq,PartialOrd,Ord)]
 pub enum Hora {
     H07,H08,H09,H10,
     H11,H12,H13,H14,
@@ -17,7 +17,7 @@ pub enum Hora {
     H19,H20,H21,H22,
 }
 
-#[derive(Debug,Clone,PartialEq,Eq,PartialOrd,Ord)]
+#[derive(Debug,Copy,Clone,PartialEq,Eq,PartialOrd,Ord)]
 pub enum Dia {
     Lu,
     Ma,
@@ -28,21 +28,21 @@ pub enum Dia {
     Do,
 }
 
-#[derive(Debug,Clone,PartialEq,Eq,PartialOrd,Ord)]
+#[derive(Debug,Copy,Clone,PartialEq,Eq,PartialOrd,Ord)]
 pub enum Area{
     A,
     B,
     C,
 }
 
-#[derive(Debug,Clone,PartialEq,Eq,PartialOrd,Ord)]
+#[derive(Debug,Copy,Clone,PartialEq,Eq,PartialOrd,Ord)]
 pub enum Bloque{
     B1,
     B2,
     B3,
 }
 
-#[derive(Debug,Clone,PartialEq,Eq,PartialOrd,Ord)]
+#[derive(Debug,Copy,Clone,PartialEq,Eq,PartialOrd,Ord)]
 pub struct Horario {
     pub hora : Hora,
     pub dia : Dia,
@@ -55,7 +55,7 @@ impl Horario {
 }
 
 
-#[derive(Debug,Clone,PartialEq,Eq,PartialOrd,Ord)]
+#[derive(Debug,Copy,Clone,PartialEq,Eq,PartialOrd,Ord)]
 pub struct Tema {
     pub bloque : Bloque,
     pub area : Area,
@@ -159,6 +159,7 @@ pub trait Afiliade {
     fn get_id(&self) -> usize;
     fn get_nombre(&self) -> &str;
     fn get_temas(&self) -> &BTreeSet<Tema>;
+    fn get_mut_temas(&mut self) -> &mut BTreeSet<Tema>;
     fn get_disponibilidad(&self) -> &BTreeSet<Horario>;
     fn info(&self);
 }
@@ -172,6 +173,9 @@ impl Afiliade for Instructor {
     }
     fn get_temas(&self) -> &BTreeSet<Tema> {
         &self.temas_que_imparte
+    }
+    fn get_mut_temas(&mut self) -> &mut BTreeSet<Tema> {
+        &mut self.temas_que_imparte
     }
     fn get_disponibilidad(&self) -> &BTreeSet<Horario> {
         &self.disponibilidad
@@ -197,6 +201,9 @@ impl Afiliade for Militante {
     }
     fn get_temas(&self) -> &BTreeSet<Tema> {
         &self.temas_que_lleva
+    }
+    fn get_mut_temas(&mut self) -> &mut BTreeSet<Tema> {
+        &mut self.temas_que_lleva
     }
     fn get_disponibilidad(&self) -> &BTreeSet<Horario> {
         &self.disponibilidad
@@ -403,7 +410,7 @@ fn listar_afiliades_de_grupo<T:Afiliade>( ids : &BTreeSet<usize>,  afiliades : &
 // BUSCAR
 */
 
-pub fn buscar_afiliade_por_nombre<T: Afiliade>(nombre: &str, lista : &Vec<T>) -> Result<usize,()> {
+fn buscar_afiliade_por_nombre<T: Afiliade>(nombre: &str, lista : &Vec<T>) -> Result<usize,()> {
     let mut resultados : Vec<(usize, &str)> = vec![];
     let nombre = nombre.to_lowercase();
 
@@ -429,7 +436,7 @@ pub fn buscar_afiliade_por_nombre<T: Afiliade>(nombre: &str, lista : &Vec<T>) ->
     }
 }
 
-pub fn buscar_afiliade<T: Afiliade>( query : &str, lista : &Vec<T> ) -> Result<usize,()> {
+fn buscar_afiliade<T: Afiliade>( query : &str, lista : &Vec<T> ) -> Result<usize,()> {
     
     if let Ok(id) = query.parse::<usize>() {
 
@@ -734,6 +741,20 @@ pub fn generar_grupos_de_curso(
     militantes : &Vec<Militante>
 ) {
 
+    curso.instructores_que_imparten = BTreeSet::new();
+    curso.militantes_que_tomaran = BTreeSet::new();
+
+    for instructor in instructores {
+        if instructor.get_temas().contains(&curso.tema) {
+            curso.instructores_que_imparten.insert(instructor.get_id());
+        }
+    }
+
+    for militante in militantes {
+        if militante.get_temas().contains(&curso.tema) {
+            curso.militantes_que_tomaran.insert(militante.get_id());
+        }
+    }
 
     for mut grupo in &mut curso.grupos {
         grupo.instructores = BTreeSet::new();
@@ -908,23 +929,110 @@ pub fn crear_grupo(
 }
 
 
-fn procesar_lista( lista : &str, militantes : &Vec<Militante> ) -> Result<BTreeSet<usize>,()> {
+fn procesar_lista<T:Afiliade>( lista : &str, afiliades : &Vec<T> ) -> Result<BTreeSet<usize>,()> {
 
-    let mut lista_militantes : BTreeSet<usize> = BTreeSet::new();
+    let mut lista_afiliades : BTreeSet<usize> = BTreeSet::new();
 
     for split in lista.split(",") {
-        match buscar_afiliade( split, &militantes ) {
-            Ok(id) => {lista_militantes.insert(id);} ,
+        match buscar_afiliade( split, &afiliades ) {
+            Ok(id) => {lista_afiliades.insert(id);} ,
             Err(()) => return Err(()),
         }
     }
 
-    Ok(lista_militantes)
+    Ok(lista_afiliades)
 }
 
 
 // Inscribir militantes/instructores a cursos
 
+pub fn inscribir_help() {
+    println!("Uso: 
+    inscribir [instructor | militante] [lista de afiliades] [curso_id]")
+}
+
+pub fn desinscribir_help() {
+    println!("Uso: 
+    desinscribir [instructor | militante] [lista de afiliades] [curso_id]")
+}
+
+fn inscribir_afiliade_curso<T:Afiliade> (
+    afiliade : &mut T,
+    tema : Tema,
+) -> bool {
+    let temas = afiliade.get_mut_temas();
+    temas.insert(tema)
+}
+
+fn desinscribir_afiliade_curso<T:Afiliade>(
+    afiliade : &mut T,
+    tema : Tema,
+) -> bool {
+    let temas = afiliade.get_mut_temas();
+    temas.remove(&tema)
+}
+
+pub fn inscribir_afiliades_curso<T:Afiliade> (
+    afiliades : &mut Vec<T>,
+    lista_afiliades : &str,
+    curso_id : &str 
+){
+
+    let tema = match buscar_curso_por_id(curso_id) { 
+        Ok(tema) => tema,
+        Err(()) => return,
+    };
+
+    let lista_afiliades = match procesar_lista( lista_afiliades, &afiliades ) {
+        Ok(lista) => lista,
+        Err(()) => return,
+    };
+
+    for id in lista_afiliades {
+        let afiliade = &mut afiliades[id];
+        if inscribir_afiliade_curso( afiliade, tema ) {
+            println!("Se ha inscrito al afiliade {} a {}",
+                afiliade.get_nombre(),
+                tema.to_string());
+        }
+        else {
+            println!("Afiliade {} ya estaba inscrito a {}",
+                afiliade.get_nombre(),
+                tema.to_string());
+        }
+    }
+}
+
+pub fn desinscribir_afiliades_curso<T:Afiliade> (
+    afiliades : &mut Vec<T>,
+    lista_afiliades : &str,
+    curso_id : &str 
+){
+
+    let tema = match buscar_curso_por_id(curso_id) { 
+        Ok(tema) => tema,
+        Err(()) => return,
+    };
+
+    let lista_afiliades = match procesar_lista( lista_afiliades, &afiliades ) {
+        Ok(lista) => lista,
+        Err(()) => return,
+    };
+
+    for id in lista_afiliades {
+        let afiliade = &mut afiliades[id];
+        if desinscribir_afiliade_curso( afiliade, tema ) {
+            println!("Se ha desinscrito al afiliade {} de {}",
+                afiliade.get_nombre(),
+                tema.to_string());
+        }
+        else {
+            println!("Afiliade {} no estaba inscrito a {}",
+                afiliade.get_nombre(),
+                tema.to_string());
+        }
+    }
+}
 
 // Mostrar grupos creados
 
