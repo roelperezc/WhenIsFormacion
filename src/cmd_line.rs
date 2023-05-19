@@ -117,6 +117,10 @@ pub fn cmd_line(
                 help();
             },
 
+            "creados" => {
+                mostrar_grupos_creados(grupos_confirmados, instructores, militantes);
+            },
+
             "q" => {
                 mostrar_grupos_creados(grupos_confirmados, instructores, militantes);
                 break;

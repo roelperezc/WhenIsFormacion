@@ -364,7 +364,11 @@ Cursos y grupos:
     mostrar curso [id]
     mostrar grupo <curso_id> <grupo_id>
     crear grupo <curso_id> <horario> [-x <lista> | -i <lista>]
-    TODO: inscribir [instructor | militante] [nombre | id] [curso] [id] 
+    TODO: inscribir [instructor | militante] [nombre | id] [curso] [id]
+    creados
+    
+Salir
+    q
 ")
 }
 
