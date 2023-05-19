@@ -14,7 +14,8 @@ pub fn cmd_line(
         println!("");
         std::io::stdin().read_line(&mut input).unwrap();
         let trimmed_input = input.trim();
-        let split = trimmed_input.split(' ');
+        let lowercase_input = trimmed_input.to_lowercase();
+        let split = lowercase_input.split(' ');
         let args : Vec<&str> = split.collect();
 
         match args[0] {
